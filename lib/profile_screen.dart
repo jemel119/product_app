@@ -46,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _openPasswordDialog() async {
     final changed = await showDialog<bool>(
       context: context,
+      useRootNavigator: false,
       barrierDismissible: false,
       builder: (_) => _PasswordDialog(authService: widget.authService),
     );

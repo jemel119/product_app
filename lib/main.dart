@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
+import 'auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,13 +12,11 @@ Future<void> main() async {
     const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Autumn Product Manager',
-      home: ProductPage(),
+      home: AuthGate(),
     ),
   );
 }
 
-// Stage 9: Keep the filtering rules testable independently of Firebase.
-// All supplied conditions must match, and price boundaries are inclusive.
 bool productMatchesFilters(
   Map<String, dynamic> data, {
   String searchText = '',
@@ -60,7 +59,6 @@ bool productMatchesFilters(
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key, this.products});
 
-  // Stage 9: Optional collection for tests. Production uses Firestore.
   final CollectionReference<Map<String, dynamic>>? products;
 
   @override
@@ -71,10 +69,8 @@ class _ProductPageState extends State<ProductPage> {
   late final CollectionReference<Map<String, dynamic>> _products;
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _productStream;
 
-  // Stage 6: Live, case-insensitive name search.
   final _searchController = TextEditingController();
 
-  // Stage 7: Optional minimum and maximum price filters.
   final _minPriceController = TextEditingController();
   final _maxPriceController = TextEditingController();
 
@@ -82,7 +78,6 @@ class _ProductPageState extends State<ProductPage> {
   void initState() {
     super.initState();
 
-    // Stage 9: Use the injected collection only when supplied.
     _products =
         widget.products ?? FirebaseFirestore.instance.collection('products');
     _productStream = _products.snapshots();
@@ -108,15 +103,12 @@ class _ProductPageState extends State<ProductPage> {
     super.dispose();
   }
 
-  // Stage 7: Reset all search and price controls.
   void _resetFilters() {
     _searchController.clear();
     _minPriceController.clear();
     _maxPriceController.clear();
   }
 
-  // Empty bounds are allowed. Supplied bounds must be finite
-  // nonnegative numbers, and minimum must not exceed maximum.
   String? _filterError() {
     final minText = _minPriceController.text.trim();
     final maxText = _maxPriceController.text.trim();
@@ -219,7 +211,6 @@ class _ProductPageState extends State<ProductPage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                // Stage 6: Search input above the product list.
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -238,7 +229,6 @@ class _ProductPageState extends State<ProductPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Stage 7: Inclusive minimum and maximum price fields.
                 Row(
                   children: [
                     Expanded(
@@ -321,8 +311,6 @@ class _ProductPageState extends State<ProductPage> {
                   );
                 }
 
-                // Stage 9: Use the same filtering rules in the app
-                // and in automated tests.
                 final documents = allDocuments.where((document) {
                   return productMatchesFilters(
                     document.data(),
